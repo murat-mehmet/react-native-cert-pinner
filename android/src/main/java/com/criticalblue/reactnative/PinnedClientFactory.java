@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
@@ -60,6 +61,18 @@ public class PinnedClientFactory implements OkHttpClientFactory {
             // Create an ssl socket factory with our all-trusting manager
             final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
+            HostnameVerifier hostnameVerifier = new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+            try {
+                HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
+                HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
+            } catch (Exception e) { // should never happen
+                e.printStackTrace();
+            }
 
             ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
                     .tlsVersions(TlsVersion.TLS_1_1)
@@ -79,12 +92,7 @@ public class PinnedClientFactory implements OkHttpClientFactory {
                     .connectTimeout(0, TimeUnit.MILLISECONDS).readTimeout(0, TimeUnit.MILLISECONDS)
                     .writeTimeout(0, TimeUnit.MILLISECONDS).cookieJar(new ReactCookieJarContainer());
             builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
-            builder.hostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            });
+            builder.hostnameVerifier(hostnameVerifier);
 
             if (certificatePinner != null) {
                 builder.certificatePinner(certificatePinner);
