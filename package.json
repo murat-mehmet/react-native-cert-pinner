@@ -1,6 +1,6 @@
 {
   "name": "mm-react-native-cert-pinner",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "For React Native, pins TLS connections to specific trusted certificates' public keys",
   "author": {
     "name": "SKip Hovsmith",
